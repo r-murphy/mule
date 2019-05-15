@@ -10,6 +10,18 @@
           "methodName": "duplicateFor",
           "elementKind": "method",
           "justification": "Each Error Handler ref needs a copy of every inner error handler"
+        },
+        {
+          "code": "java.field.nowFinal",
+          "old": "field org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder.artifactConfigResources",
+          "new": "field org.mule.runtime.core.api.config.builders.AbstractResourceConfigurationBuilder.artifactConfigResources",
+          "oldModifiers": "protected",
+          "newModifiers": "protected final",
+          "package": "org.mule.runtime.core.api.config.builders",
+          "classSimpleName": "AbstractResourceConfigurationBuilder",
+          "fieldName": "artifactConfigResources",
+          "elementKind": "field",
+          "justification": "If someone is writing into this field, it is a bug."
         }
       ]
     }

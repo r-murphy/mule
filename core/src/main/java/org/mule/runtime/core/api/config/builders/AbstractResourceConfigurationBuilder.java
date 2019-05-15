@@ -12,10 +12,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.api.annotation.NoExtend;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.dsl.api.ConfigResource;
 import org.mule.runtime.core.api.config.ConfigurationBuilder;
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.util.StringUtils;
+import org.mule.runtime.dsl.api.ConfigResource;
 
 import java.io.IOException;
 import java.util.Map;
@@ -34,7 +34,7 @@ public abstract class AbstractResourceConfigurationBuilder extends AbstractConfi
   private static final Logger LOGGER = getLogger(AbstractResourceConfigurationBuilder.class);
 
   private final Map<String, String> artifactProperties;
-  protected ConfigResource[] artifactConfigResources;
+  protected final ConfigResource[] artifactConfigResources;
 
   /**
    * @param artifactConfigResources a comma separated list of configuration files to load, this should be accessible on the
@@ -88,7 +88,7 @@ public abstract class AbstractResourceConfigurationBuilder extends AbstractConfi
 
   protected ConfigResource[] loadConfigResources(String[] configs) throws ConfigurationException {
     try {
-      artifactConfigResources = new ConfigResource[configs.length];
+      ConfigResource[] artifactConfigResources = new ConfigResource[configs.length];
       for (int i = 0; i < configs.length; i++) {
         artifactConfigResources[i] = new ConfigResource(configs[i]);
       }

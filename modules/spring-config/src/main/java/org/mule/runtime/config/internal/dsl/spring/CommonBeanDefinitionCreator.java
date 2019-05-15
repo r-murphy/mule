@@ -24,6 +24,7 @@ import static org.mule.runtime.core.privileged.execution.LocationExecutionContex
 import static org.mule.runtime.deployment.model.internal.application.MuleApplicationClassLoader.resolveContextArtifactPluginClassLoaders;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
+
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -31,6 +32,7 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
 import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.api.util.Pair;
+import org.mule.runtime.ast.api.ComponentAst;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.config.internal.factories.ModuleOperationMessageProcessorChainFactoryBean;
@@ -42,8 +44,6 @@ import org.mule.runtime.core.api.security.SecurityFilter;
 import org.mule.runtime.core.privileged.processor.SecurityFilterMessageProcessor;
 import org.mule.runtime.core.privileged.processor.chain.DefaultMessageProcessorChainBuilder;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
-
-import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +61,8 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Processor in the chain of responsibility that knows how to handle a generic {@code ComponentBuildingDefinition}.
  *
@@ -76,7 +78,7 @@ public class CommonBeanDefinitionCreator extends BeanDefinitionCreator {
           .build();
 
   private final ObjectFactoryClassRepository objectFactoryClassRepository;
-  private BeanDefinitionPostProcessor beanDefinitionPostProcessor;
+  private final BeanDefinitionPostProcessor beanDefinitionPostProcessor;
 
   public CommonBeanDefinitionCreator(ObjectFactoryClassRepository objectFactoryClassRepository) {
     this.objectFactoryClassRepository = objectFactoryClassRepository;
@@ -163,8 +165,10 @@ public class CommonBeanDefinitionCreator extends BeanDefinitionCreator {
    *        name of the flow.
    */
   private void processMacroExpandedAnnotations(ComponentModel componentModel, Map<QName, Object> annotations) {
-    if (componentModel.getCustomAttributes().containsKey(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME)) {
-      final Object flowName = componentModel.getCustomAttributes().get(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME);
+    if (((ComponentAst) componentModel).getMetadata().getParserAttributes()
+        .containsKey(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME)) {
+      final Object flowName =
+          ((ComponentAst) componentModel).getMetadata().getParserAttributes().get(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME);
       annotations.put(AbstractComponent.ROOT_CONTAINER_NAME_KEY, flowName);
     }
   }
@@ -175,7 +179,9 @@ public class CommonBeanDefinitionCreator extends BeanDefinitionCreator {
       return annotations;
     } else {
       if (Component.class.isAssignableFrom(builder.getBeanDefinition().getBeanClass())) {
-        addMetadataAnnotationsFromXml(annotations, componentModel.getSourceCode(), componentModel.getCustomAttributes());
+        addMetadataAnnotationsFromXml(annotations,
+                                      componentModel.getMetadata().getSourceCode().orElse(null),
+                                      componentModel.getMetadata().getParserAttributes());
         builder.getBeanDefinition().getPropertyValues().addPropertyValue("annotations", annotations);
       }
 

@@ -8,7 +8,9 @@ package org.mule.runtime.config.internal.dsl.spring;
 
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.dsl.api.component.DslSimpleType.isSimpleType;
+
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.ast.api.ComponentAst;
 import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.dsl.processor.ObjectTypeVisitor;
 import org.mule.runtime.dsl.api.component.TypeConverter;
@@ -21,7 +23,7 @@ import java.util.Optional;
  * <p>
  * <p>
  * Elements that represent a simple type always have the form
- * 
+ *
  * <pre>
  *  <element value="simpleValue"/>
  * </pre>
@@ -53,9 +55,10 @@ class SimpleTypeBeanDefinitionCreator extends BeanDefinitionCreator {
           : (parameters.values().isEmpty() ? null : parameters.values().iterator().next());
       if (value == null) {
         throw new MuleRuntimeException(createStaticMessage("Parameter at %s:%s must provide a non-empty value",
-                                                           componentModel.getConfigFileName()
+                                                           ((ComponentAst) componentModel).getMetadata().getFileName()
                                                                .orElse("unknown"),
-                                                           componentModel.getLineNumber().orElse(-1)));
+                                                           ((ComponentAst) componentModel).getMetadata().getStartLine()
+                                                               .orElse(-1)));
       }
       Optional<TypeConverter> typeConverterOptional =
           createBeanDefinitionRequest.getComponentBuildingDefinition().getTypeConverter();

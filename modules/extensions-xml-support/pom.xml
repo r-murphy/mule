@@ -37,6 +37,10 @@
             <artifactId>mule-extensions-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mule.runtime</groupId>
+            <artifactId>mule-module-artifact-ast</artifactId>
+        </dependency>
+        <dependency>
             <!-- TODO(fernandezlautaro): MULE-11009 needed dependency as we heavily rely  org.mule.runtime.module.extension.internal.introspection.DefaultExtensionFactory to generate an ExtensionModel from a Describer -->
             <groupId>org.mule.runtime</groupId>
             <artifactId>mule-module-extensions-support</artifactId>

@@ -20,6 +20,7 @@ import static org.mule.runtime.api.util.Preconditions.checkState;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.CONFIGURATION_IDENTIFIER;
 import static org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory.SPRING_SINGLETON_OBJECT;
 import static org.mule.runtime.config.internal.dsl.spring.ComponentModelHelper.updateAnnotationValue;
+import static org.mule.runtime.config.internal.dsl.xml.XmlNamespaceInfoProviderSupplier.createFromExtensionModels;
 import static org.mule.runtime.config.internal.parsers.generic.AutoIdUtils.uniqueValue;
 import static org.mule.runtime.config.internal.util.ComponentBuildingDefinitionUtils.getExtensionModelsComponentBuildingDefinitions;
 import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_CONFIGURATION;
@@ -34,6 +35,7 @@ import static org.mule.runtime.dsl.api.xml.parser.XmlConfigurationDocumentLoader
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 import static org.springframework.context.annotation.AnnotationConfigUtils.CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME;
 import static org.springframework.context.annotation.AnnotationConfigUtils.REQUIRED_ANNOTATION_PROCESSOR_BEAN_NAME;
+
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -42,6 +44,7 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.ioc.ConfigurableObjectProvider;
 import org.mule.runtime.api.ioc.ObjectProvider;
 import org.mule.runtime.api.meta.model.ExtensionModel;
+import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.api.util.Pair;
 import org.mule.runtime.api.util.ResourceLocator;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
@@ -54,7 +57,6 @@ import org.mule.runtime.config.internal.dsl.model.SpringComponentModel;
 import org.mule.runtime.config.internal.dsl.model.config.DefaultConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.dsl.model.config.EnvironmentPropertiesConfigurationProvider;
 import org.mule.runtime.config.internal.dsl.spring.BeanDefinitionFactory;
-import org.mule.runtime.config.internal.dsl.xml.XmlNamespaceInfoProviderSupplier;
 import org.mule.runtime.config.internal.editors.MulePropertyEditorRegistrar;
 import org.mule.runtime.config.internal.model.ApplicationModel;
 import org.mule.runtime.config.internal.model.ComponentModel;
@@ -96,7 +98,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.xml.parsers.SAXParserFactory;
 
@@ -135,6 +136,9 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
   public static final String INNER_BEAN_PREFIX = "(inner bean)";
 
+  private static final Supplier<SAXParserFactory> SAX_PARSER_FACTORY_SUPPLIER =
+      new LazyValue<>(() -> XMLSecureFactories.createDefault().getSAXParserFactory());
+
   protected final ComponentBuildingDefinitionRegistry componentBuildingDefinitionRegistry =
       new ComponentBuildingDefinitionRegistry();
   private final OptionalObjectsController optionalObjectsController;
@@ -147,11 +151,11 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
   private final DefaultResourceLocator resourceLocator;
   protected ApplicationModel applicationModel;
   protected MuleContextWithRegistry muleContext;
-  private ConfigResource[] artifactConfigResources;
+  private final ConfigResource[] artifactConfigResources;
   protected BeanDefinitionFactory beanDefinitionFactory;
   private final ServiceRegistry serviceRegistry = new SpiServiceRegistry();
-  private ArtifactType artifactType;
-  private List<ComponentIdentifier> componentNotSupportedByNewParsers = new ArrayList<>();
+  private final ArtifactType artifactType;
+  private final List<ComponentIdentifier> componentNotSupportedByNewParsers = new ArrayList<>();
   protected SpringConfigurationComponentLocator componentLocator = new SpringConfigurationComponentLocator(componentName -> {
     try {
       BeanDefinition beanDefinition = getBeanFactory().getBeanDefinition(componentName);
@@ -276,7 +280,7 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
         @Override
         public Supplier<SAXParserFactory> getSaxParserFactory() {
-          return () -> XMLSecureFactories.createDefault().getSAXParserFactory();
+          return SAX_PARSER_FACTORY_SUPPLIER;
         }
 
         @Override
@@ -291,8 +295,8 @@ public class MuleArtifactContext extends AbstractRefreshableConfigApplicationCon
 
         @Override
         public List<XmlNamespaceInfoProvider> getXmlNamespaceInfoProvider() {
-          return XmlNamespaceInfoProviderSupplier.createFromExtensionModels(getExtensions(), Optional.of(cl -> serviceRegistry
-              .lookupProviders(XmlNamespaceInfoProvider.class, cl).stream().collect(Collectors.toList())));
+          return createFromExtensionModels(getExtensions(), of(cl -> serviceRegistry
+              .lookupProviders(XmlNamespaceInfoProvider.class, cl).stream().collect(toList())));
         }
       });
 

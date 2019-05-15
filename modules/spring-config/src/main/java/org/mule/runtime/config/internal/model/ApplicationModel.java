@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mule.runtime.api.component.ComponentIdentifier.builder;
 import static org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType.UNKNOWN;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import static org.mule.runtime.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ERROR_HANDLER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ERROR_HANDLER_IDENTIFIER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.FLOW_IDENTIFIER;
@@ -35,11 +36,11 @@ import static org.mule.runtime.core.api.el.ExpressionManager.DEFAULT_EXPRESSION_
 import static org.mule.runtime.core.api.exception.Errors.Identifiers.ANY_IDENTIFIER;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
-import static org.mule.runtime.extension.api.util.NameUtils.hyphenize;
 import static org.mule.runtime.extension.api.util.NameUtils.pluralize;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import static org.mule.runtime.internal.util.NameValidationUtil.verifyStringDoesNotContainsReservedCharacters;
 import static org.slf4j.LoggerFactory.getLogger;
+
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.Component;
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -51,6 +52,8 @@ import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.app.declaration.api.ArtifactDeclaration;
 import org.mule.runtime.app.declaration.api.ElementDeclaration;
+import org.mule.runtime.ast.api.ArtifactAst;
+import org.mule.runtime.ast.api.ComponentAst;
 import org.mule.runtime.config.api.dsl.model.ComponentBuildingDefinitionRegistry;
 import org.mule.runtime.config.api.dsl.model.ConfigurationParameters;
 import org.mule.runtime.config.api.dsl.model.DslElementModelFactory;
@@ -84,9 +87,6 @@ import org.mule.runtime.dsl.api.component.config.DefaultComponentLocation;
 import org.mule.runtime.dsl.api.xml.parser.ConfigFile;
 import org.mule.runtime.dsl.api.xml.parser.ConfigLine;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,6 +104,9 @@ import javax.xml.namespace.QName;
 
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 /**
  * An {@code ApplicationModel} holds a representation of all the artifact configuration using an abstract model to represent any
  * configuration option.
@@ -116,7 +119,7 @@ import org.slf4j.Logger;
  *
  * @since 4.0
  */
-public class ApplicationModel {
+public class ApplicationModel implements ArtifactAst {
 
   private static final Logger LOGGER = getLogger(ApplicationModel.class);
 
@@ -280,11 +283,11 @@ public class ApplicationModel {
 
   private final Optional<ComponentBuildingDefinitionRegistry> componentBuildingDefinitionRegistry;
   private final ArtifactConfig artifactConfig;
-  private List<ComponentModel> muleComponentModels = new LinkedList<>();
+  private final List<ComponentModel> muleComponentModels = new LinkedList<>();
   private PropertiesResolverConfigurationProperties configurationProperties;
-  private ResourceProvider externalResourceProvider;
-  private Map<String, ComponentModel> namedComponentModels = new HashMap<>();
-  private Map<String, ComponentModel> namedTopLevelComponentModels = new HashMap<>();
+  private final ResourceProvider externalResourceProvider;
+  private final Map<String, ComponentModel> namedComponentModels = new HashMap<>();
+  private final Map<String, ComponentModel> namedTopLevelComponentModels = new HashMap<>();
 
   /**
    * Creates an {code ApplicationModel} from a {@link ArtifactConfig}.
@@ -760,9 +763,11 @@ public class ApplicationModel {
           Optional<ComponentModel> referencedFlow = findTopLevelNamedComponent(nameAttribute);
           referencedFlow
               .orElseThrow(() -> new MuleRuntimeException(createStaticMessage("flow-ref at %s:%s is pointing to %s which does not exist",
-                                                                              componentModel.getConfigFileName()
+                                                                              ((ComponentAst) componentModel).getMetadata()
+                                                                                  .getFileName()
                                                                                   .orElse("unknown"),
-                                                                              componentModel.getLineNumber().orElse(-1),
+                                                                              ((ComponentAst) componentModel).getMetadata()
+                                                                                  .getStartLine().orElse(-1),
                                                                               nameAttribute)));
         }
       }
@@ -807,15 +812,20 @@ public class ApplicationModel {
 
         if (existingObjectsWithName.containsKey(nameAttributeValue)) {
           ComponentModel otherComponentModel = existingObjectsWithName.get(nameAttributeValue);
-          if (componentModel.getConfigFileName().isPresent() && componentModel.getLineNumber().isPresent() &&
-              otherComponentModel.getConfigFileName().isPresent() && otherComponentModel.getLineNumber().isPresent()) {
+          if (((ComponentAst) componentModel).getMetadata().getFileName().isPresent()
+              && ((ComponentAst) componentModel).getMetadata().getStartLine().isPresent() &&
+              ((ComponentAst) otherComponentModel).getMetadata().getFileName().isPresent()
+              && ((ComponentAst) otherComponentModel).getMetadata().getStartLine().isPresent()) {
             throw new MuleRuntimeException(createStaticMessage(
                                                                "The configuration element [%s] can only appear once, but was present in both [%s:%d] and [%s:%d]",
                                                                componentModel.getIdentifier(),
-                                                               otherComponentModel.getConfigFileName().get(),
-                                                               otherComponentModel.getLineNumber().get(),
-                                                               componentModel.getConfigFileName().get(),
-                                                               componentModel.getLineNumber().get()));
+                                                               ((ComponentAst) otherComponentModel).getMetadata().getFileName()
+                                                                   .get(),
+                                                               ((ComponentAst) otherComponentModel).getMetadata().getStartLine()
+                                                                   .getAsInt(),
+                                                               ((ComponentAst) componentModel).getMetadata().getFileName().get(),
+                                                               ((ComponentAst) componentModel).getMetadata().getStartLine()
+                                                                   .getAsInt()));
           } else {
             throw new MuleRuntimeException(createStaticMessage(
                                                                "The configuration element [%s] can only appear once, but was present multiple times",
@@ -855,8 +865,10 @@ public class ApplicationModel {
           throw new MuleRuntimeException(createStaticMessage(
                                                              format("Invalid global element name '%s' in %s:%s. Problem is: %s",
                                                                     nameAttributeValue,
-                                                                    componentModel.getConfigFileName().orElse("unknown"),
-                                                                    componentModel.getLineNumber().orElse(-1),
+                                                                    ((ComponentAst) componentModel).getMetadata().getFileName()
+                                                                        .orElse("unknown"),
+                                                                    ((ComponentAst) componentModel).getMetadata().getStartLine()
+                                                                        .orElse(-1),
                                                                     e.getMessage())));
         }
       }
@@ -1028,8 +1040,8 @@ public class ApplicationModel {
   private void validateSingleElementExistence(ComponentIdentifier componentIdentifier) {
     Map<String, Map<ComponentIdentifier, ComponentModel>> existingComponentsPerFile = new HashMap<>();
 
-    executeOnEveryMuleComponentTree(componentModel -> componentModel
-        .getConfigFileName().ifPresent(configFileName -> {
+    executeOnEveryMuleComponentTree(componentModel -> ((ComponentAst) componentModel).getMetadata().getFileName()
+        .ifPresent(configFileName -> {
           ComponentIdentifier identifier = componentModel.getIdentifier();
 
           if (componentIdentifier.getNamespace().equals(identifier.getNamespace())

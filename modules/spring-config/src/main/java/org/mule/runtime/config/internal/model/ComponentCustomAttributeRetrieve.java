@@ -8,6 +8,8 @@ package org.mule.runtime.config.internal.model;
 
 import static org.mule.runtime.dsl.internal.xml.parser.XmlApplicationParser.NAMESPACE_URI;
 
+import org.mule.runtime.ast.api.ComponentAst;
+
 public class ComponentCustomAttributeRetrieve {
 
   private final ComponentModel componentModel;
@@ -28,7 +30,7 @@ public class ComponentCustomAttributeRetrieve {
    * @return the namespace URI of the XML source element.
    */
   public String getNamespaceUri() {
-    return (String) this.componentModel.getCustomAttributes().get(NAMESPACE_URI);
+    return (String) ((ComponentAst) this.componentModel).getMetadata().getParserAttributes().get(NAMESPACE_URI);
   }
 
 }

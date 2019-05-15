@@ -22,6 +22,7 @@ import static org.mule.runtime.core.internal.processor.chain.ModuleOperationMess
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
 import static org.mule.runtime.internal.dsl.DslConstants.KEY_ATTRIBUTE_NAME;
 import static org.mule.runtime.internal.dsl.DslConstants.VALUE_ATTRIBUTE_NAME;
+
 import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.dsl.DslResolvingContext;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -32,6 +33,7 @@ import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterRole;
 import org.mule.runtime.api.meta.model.util.IdempotentExtensionWalker;
+import org.mule.runtime.ast.api.ComponentAst;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.GlobalElementComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.OperationComponentModelModelProperty;
 import org.mule.runtime.config.internal.dsl.model.extension.xml.property.PrivateOperationsModelProperty;
@@ -86,7 +88,7 @@ public class MacroExpansionModuleModel {
 
   /**
    * Used to leave breadcrumbs of which is the flow's name containing the macro expanded chain.
-   * 
+   *
    * @see CommonBeanDefinitionCreator#processMacroExpandedAnnotations(ComponentModel, java.util.Map)
    */
   public static final String ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME = "ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME";
@@ -163,7 +165,8 @@ public class MacroExpansionModuleModel {
     if (containerComponentModel.isRoot()) {
       nameAttribute = containerComponentModel.getNameAttribute();
     } else if (MODULE_OPERATION_CHAIN.equals(containerComponentModel.getIdentifier())) {
-      nameAttribute = (String) containerComponentModel.getCustomAttributes().get(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME);
+      nameAttribute = (String) ((ComponentAst) containerComponentModel).getMetadata().getParserAttributes()
+          .get(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME);
     } else if (containerComponentModel.getParent() != null) {
       nameAttribute = calculateContainerRootName(containerComponentModel.getParent(), operationModel);
     } else {
@@ -303,7 +306,7 @@ public class MacroExpansionModuleModel {
         getParameterChild(parametersMap, "module-operation-parameters", "module-operation-parameter-entry");
     processorChainBuilder.addChildComponentModel(propertiesComponentModel);
     processorChainBuilder.addChildComponentModel(parametersComponentModel);
-    processorChainBuilder.setSourceCode(operationRefModel.getSourceCode());
+    ((ComponentAst) operationRefModel).getMetadata().getSourceCode().ifPresent(processorChainBuilder::setSourceCode);
 
     for (ComponentModel bodyProcessor : bodyProcessors) {
       ComponentModel childMPcomponentModel =
@@ -317,19 +320,22 @@ public class MacroExpansionModuleModel {
     }
     copyErrorMappings(operationRefModel, processorChainBuilder);
 
-    for (Map.Entry<String, Object> customAttributeEntry : operationRefModel.getCustomAttributes().entrySet()) {
+    for (Map.Entry<String, Object> customAttributeEntry : ((ComponentAst) operationRefModel).getMetadata().getParserAttributes()
+        .entrySet()) {
       processorChainBuilder.addCustomAttribute(customAttributeEntry.getKey(), customAttributeEntry.getValue());
     }
     processorChainBuilder.addCustomAttribute(ROOT_MACRO_EXPANDED_FLOW_CONTAINER_NAME, containerName);
+
+    ((ComponentAst) operationRefModel).getMetadata().getFileName().ifPresent(processorChainBuilder::setConfigFileName);
+    ((ComponentAst) operationRefModel).getMetadata().getStartLine().ifPresent(processorChainBuilder::setLineNumber);
+    ((ComponentAst) operationRefModel).getMetadata().getStartColumn().ifPresent(processorChainBuilder::setStartColumn);
+    processorChainBuilder.addCustomAttribute(ORIGINAL_IDENTIFIER, operationRefModel.getIdentifier());
+
     ComponentModel processorChainModel = processorChainBuilder.build();
     for (ComponentModel processorChainModelChild : processorChainModel.getInnerComponents()) {
       processorChainModelChild.setParent(processorChainModel);
     }
 
-    operationRefModel.getConfigFileName().ifPresent(processorChainBuilder::setConfigFileName);
-    operationRefModel.getLineNumber().ifPresent(processorChainBuilder::setLineNumber);
-    operationRefModel.getStartColumn().ifPresent(processorChainBuilder::setStartColumn);
-    processorChainBuilder.addCustomAttribute(ORIGINAL_IDENTIFIER, operationRefModel.getIdentifier());
     return processorChainModel;
   }
 
@@ -621,17 +627,17 @@ public class MacroExpansionModuleModel {
     operationReplacementModel
         .setIdentifier(componentModelOrigin.getIdentifier())
         .setTextContent(componentModelOrigin.getTextContent());
-    for (Map.Entry<String, Object> entry : componentModelOrigin.getCustomAttributes().entrySet()) {
+    for (Map.Entry<String, Object> entry : ((ComponentAst) componentModelOrigin).getMetadata().getParserAttributes().entrySet()) {
       operationReplacementModel.addCustomAttribute(entry.getKey(), entry.getValue());
     }
     return operationReplacementModel;
   }
 
   private ComponentModel buildFrom(ComponentModel componentModelOrigin, ComponentModel.Builder operationReplacementModel) {
-    componentModelOrigin.getConfigFileName().ifPresent(operationReplacementModel::setConfigFileName);
-    componentModelOrigin.getLineNumber().ifPresent(operationReplacementModel::setLineNumber);
-    componentModelOrigin.getStartColumn().ifPresent(operationReplacementModel::setStartColumn);
-    operationReplacementModel.setSourceCode(componentModelOrigin.getSourceCode());
+    componentModelOrigin.getMetadata().getFileName().ifPresent(operationReplacementModel::setConfigFileName);
+    componentModelOrigin.getMetadata().getStartLine().ifPresent(operationReplacementModel::setLineNumber);
+    componentModelOrigin.getMetadata().getStartColumn().ifPresent(operationReplacementModel::setStartColumn);
+    componentModelOrigin.getMetadata().getSourceCode().ifPresent(operationReplacementModel::setSourceCode);
     ComponentModel componentModel = operationReplacementModel.build();
     for (ComponentModel child : componentModel.getInnerComponents()) {
       child.setParent(componentModel);
