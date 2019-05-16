@@ -89,7 +89,7 @@ public class ComponentLocationVisitor implements Consumer<ComponentModel> {
     }
     DefaultComponentLocation componentLocation;
     Optional<TypedComponentIdentifier> typedComponentIdentifier =
-        of(builder().identifier(componentModel.getIdentifier()).type(componentModel.getTypeB())
+        of(builder().identifier(componentModel.getIdentifier()).type(componentModel.getComponentType())
             .build());
 
     if (componentModel.isRoot()) {
@@ -275,7 +275,7 @@ public class ComponentLocationVisitor implements Consumer<ComponentModel> {
         || componentModel.getIdentifier().equals(BATCH_PROCESSS_RECORDS_COMPONENT_IDENTIFIER)
         || componentModel.getIdentifier().equals(BATCH_ON_COMPLETE_IDENTIFIER)
         || componentModel.getIdentifier().equals(BATCH_STEP_COMPONENT_IDENTIFIER)
-        || componentModel.getTypeB().equals(ROUTE);
+        || componentModel.getComponentType().equals(ROUTE);
   }
 
   private boolean isHttpProxyPart(ComponentModel componentModel) {

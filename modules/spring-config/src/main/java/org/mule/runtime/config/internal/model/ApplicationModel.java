@@ -674,7 +674,11 @@ public class ApplicationModel implements ArtifactAst {
       builder.markAsRootComponent();
     }
     for (Map.Entry<String, String> parameter : componentConfiguration.getParameters().entrySet()) {
-      builder.addParameter(parameter.getKey(), parameter.getValue(), false);
+      if (parameter.getKey().startsWith("doc:")) {
+        builder.addCustomAttribute(parameter.getKey().substring("doc:".length()), parameter.getValue());
+      } else {
+        builder.addParameter(parameter.getKey(), parameter.getValue(), false);
+      }
     }
     for (ComponentConfiguration childComponentConfiguration : componentConfiguration.getNestedComponents()) {
       builder.addChildComponentModel(convertComponentConfiguration(childComponentConfiguration, false));

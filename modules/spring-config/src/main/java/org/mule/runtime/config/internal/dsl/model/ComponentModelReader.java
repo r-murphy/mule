@@ -11,6 +11,7 @@ import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_DOMAIN_ROOT_
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.MULE_ROOT_ELEMENT;
 import static org.mule.runtime.config.internal.model.ApplicationModel.POLICY_ROOT_ELEMENT;
 import static org.mule.runtime.internal.dsl.DslConstants.CORE_PREFIX;
+
 import org.mule.runtime.config.internal.dsl.model.config.ConfigurationPropertiesResolver;
 import org.mule.runtime.config.internal.model.ComponentModel;
 import org.mule.runtime.dsl.api.xml.parser.ConfigLine;
@@ -54,8 +55,13 @@ public class ComponentModelReader {
         });
 
     for (SimpleConfigAttribute simpleConfigAttribute : configLine.getConfigAttributes().values()) {
-      builder.addParameter(simpleConfigAttribute.getName(), resolveValueIfIsPlaceHolder(simpleConfigAttribute.getValue()),
-                           simpleConfigAttribute.isValueFromSchema());
+
+      if (simpleConfigAttribute.getName().startsWith("doc:")) {
+        builder.addCustomAttribute(simpleConfigAttribute.getName().substring("doc:".length()), simpleConfigAttribute.getValue());
+      } else {
+        builder.addParameter(simpleConfigAttribute.getName(), resolveValueIfIsPlaceHolder(simpleConfigAttribute.getValue()),
+                             simpleConfigAttribute.isValueFromSchema());
+      }
     }
 
     List<ComponentModel> componentModels = configLine.getChildren().stream()

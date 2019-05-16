@@ -8,7 +8,6 @@ package org.mule.runtime.config.internal.model;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Optional.ofNullable;
 import static org.mule.runtime.api.util.Preconditions.checkState;
 
 import org.mule.runtime.api.component.ComponentIdentifier;
@@ -26,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -125,14 +123,6 @@ public abstract class ComponentModel {
   }
 
   /**
-   * @return the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be created when
-   *         processing this {@code ComponentModel}.
-   */
-  public Optional<TypedComponentIdentifier.ComponentType> getComponentType() {
-    return ofNullable(componentType);
-  }
-
-  /**
    * @param componentType the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} of the object to be
    *        created when processing this {@code ComponentModel}.
    */
@@ -140,7 +130,7 @@ public abstract class ComponentModel {
     this.componentType = componentType;
   }
 
-  public TypedComponentIdentifier.ComponentType getTypeB() {
+  public TypedComponentIdentifier.ComponentType getComponentType() {
     return componentType != null ? componentType : TypedComponentIdentifier.ComponentType.UNKNOWN;
   }
 

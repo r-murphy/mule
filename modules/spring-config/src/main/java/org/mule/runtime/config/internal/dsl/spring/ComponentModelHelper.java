@@ -71,24 +71,24 @@ public class ComponentModelHelper {
     }
     return isOfType(componentModel, Processor.class)
         || isOfType(componentModel, InterceptingMessageProcessor.class)
-        || componentModel.getTypeB().equals(OPERATION)
-        || componentModel.getTypeB().equals(ROUTER)
-        || componentModel.getTypeB().equals(SCOPE);
+        || componentModel.getComponentType().equals(OPERATION)
+        || componentModel.getComponentType().equals(ROUTER)
+        || componentModel.getComponentType().equals(SCOPE);
   }
 
   public static boolean isMessageSource(ComponentModel componentModel) {
     return isOfType(componentModel, MessageSource.class)
-        || componentModel.getTypeB().equals(SOURCE);
+        || componentModel.getComponentType().equals(SOURCE);
   }
 
   public static boolean isErrorHandler(ComponentModel componentModel) {
     return isOfType(componentModel, ErrorHandler.class)
-        || componentModel.getTypeB().equals(ERROR_HANDLER);
+        || componentModel.getComponentType().equals(ERROR_HANDLER);
   }
 
   public static boolean isTemplateOnErrorHandler(ComponentModel componentModel) {
     return isOfType(componentModel, TemplateOnErrorHandler.class)
-        || componentModel.getTypeB().equals(ON_ERROR);
+        || componentModel.getComponentType().equals(ON_ERROR);
   }
 
   private static boolean isOfType(ComponentModel componentModel, Class type) {
@@ -145,6 +145,6 @@ public class ComponentModelHelper {
     return isOfType(componentModel, Router.class) || isOfType(componentModel, AbstractSelectiveRouter.class)
         || ComponentLocationVisitor.BATCH_JOB_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
         || ComponentLocationVisitor.BATCH_PROCESSS_RECORDS_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
-        || componentModel.getTypeB().equals(ROUTER);
+        || componentModel.getComponentType().equals(ROUTER);
   }
 }
