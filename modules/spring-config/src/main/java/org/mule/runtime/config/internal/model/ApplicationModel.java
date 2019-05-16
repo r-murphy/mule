@@ -341,7 +341,6 @@ public class ApplicationModel implements ArtifactAst {
     createEffectiveModel();
     indexComponentModels();
     validateModel(componentBuildingDefinitionRegistry);
-    ExtensionModelHelper extensionModelHelper = new ExtensionModelHelper(extensionModels);
     if (runtimeMode) {
       expandModules(extensionModels);
       // Have to index again the component models with macro expanded ones
@@ -350,7 +349,6 @@ public class ApplicationModel implements ArtifactAst {
     // TODO MULE-13894 do this only on runtimeMode=true once unified extensionModel names to use camelCase (see smart connectors
     // and crafted declared extension models)
     resolveComponentTypes();
-    resolveTypedComponentIdentifier(extensionModelHelper);
     executeOnEveryMuleComponentTree(componentModel -> new ComponentLocationVisitor().accept(componentModel));
   }
 
@@ -365,17 +363,6 @@ public class ApplicationModel implements ArtifactAst {
       if (componentModel.getNameAttribute() != null) {
         namedTopLevelComponentModels.put(componentModel.getNameAttribute(), componentModel);
       }
-    });
-  }
-
-  private void resolveTypedComponentIdentifier(ExtensionModelHelper extensionModelHelper) {
-    executeOnEveryComponentTree(componentModel -> {
-      Optional<TypedComponentIdentifier> typedComponentIdentifier =
-          of(TypedComponentIdentifier.builder().identifier(componentModel.getIdentifier())
-              .type(resolveComponentType(componentModel, extensionModelHelper))
-              .build());
-      componentModel.setComponentType(typedComponentIdentifier.map(typedIdentifier -> typedIdentifier.getType())
-          .orElse(TypedComponentIdentifier.ComponentType.UNKNOWN));
     });
   }
 
@@ -640,11 +627,22 @@ public class ApplicationModel implements ArtifactAst {
 
       DslElementModelFactory elementFactory = DslElementModelFactory.getDefault(DslResolvingContext.getDefault(extensionModels));
 
+      ExtensionModelHelper extensionModelHelper = new ExtensionModelHelper(extensionModels);
+
+      final ComponentIdentifier identifier = ComponentIdentifier.builder()
+          .namespace(CORE_PREFIX)
+          .name(CORE_PREFIX)
+          .build();
+
+      Optional<TypedComponentIdentifier> typedComponentIdentifier =
+          of(TypedComponentIdentifier.builder().identifier(identifier)
+              .type(resolveComponentType(identifier, extensionModelHelper))
+              .build());
+
       ComponentModel rootComponent = new ComponentModel.Builder()
-          .setIdentifier(ComponentIdentifier.builder()
-              .namespace(CORE_PREFIX)
-              .name(CORE_PREFIX)
-              .build())
+          .setIdentifier(identifier)
+          .setComponentType(typedComponentIdentifier.map(typedIdentifier -> typedIdentifier.getType())
+              .orElse(TypedComponentIdentifier.ComponentType.UNKNOWN))
           .build();
 
       AtomicBoolean atLeastOneComponentAdded = new AtomicBoolean(false);
@@ -656,7 +654,7 @@ public class ApplicationModel implements ArtifactAst {
           .forEach(config -> config
               .ifPresent(c -> {
                 atLeastOneComponentAdded.set(true);
-                ComponentModel componentModel = convertComponentConfiguration(c, true);
+                ComponentModel componentModel = convertComponentConfiguration(c, extensionModelHelper, true);
                 componentModel.setParent(rootComponent);
                 rootComponent.getInnerComponents().add(componentModel);
               }));
@@ -667,9 +665,19 @@ public class ApplicationModel implements ArtifactAst {
     }
   }
 
-  private ComponentModel convertComponentConfiguration(ComponentConfiguration componentConfiguration, boolean isRoot) {
+  private ComponentModel convertComponentConfiguration(ComponentConfiguration componentConfiguration,
+                                                       ExtensionModelHelper extensionModelHelper, boolean isRoot) {
+    final ComponentIdentifier identifier = componentConfiguration.getIdentifier();
+
+    Optional<TypedComponentIdentifier> typedComponentIdentifier =
+        of(TypedComponentIdentifier.builder().identifier(identifier)
+            .type(resolveComponentType(identifier, extensionModelHelper))
+            .build());
+
     ComponentModel.Builder builder = new ComponentModel.Builder()
-        .setIdentifier(componentConfiguration.getIdentifier());
+        .setIdentifier(identifier)
+        .setComponentType(typedComponentIdentifier.map(typedIdentifier -> typedIdentifier.getType())
+            .orElse(TypedComponentIdentifier.ComponentType.UNKNOWN));
     if (isRoot) {
       builder.markAsRootComponent();
     }
@@ -677,7 +685,7 @@ public class ApplicationModel implements ArtifactAst {
       builder.addParameter(parameter.getKey(), parameter.getValue(), false);
     }
     for (ComponentConfiguration childComponentConfiguration : componentConfiguration.getNestedComponents()) {
-      builder.addChildComponentModel(convertComponentConfiguration(childComponentConfiguration, false));
+      builder.addChildComponentModel(convertComponentConfiguration(childComponentConfiguration, extensionModelHelper, false));
     }
 
     componentConfiguration.getValue().ifPresent(builder::setTextContent);

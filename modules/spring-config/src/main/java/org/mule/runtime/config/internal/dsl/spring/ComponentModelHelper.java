@@ -18,7 +18,9 @@ import static org.mule.runtime.api.component.TypedComponentIdentifier.ComponentT
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ON_ERROR_CONTINE_IDENTIFIER;
 import static org.mule.runtime.config.api.dsl.CoreDslConstants.ON_ERROR_PROPAGATE_IDENTIFIER;
 import static org.mule.runtime.config.internal.model.ApplicationModel.REDELIVERY_POLICY_IDENTIFIER;
+
 import org.mule.runtime.api.component.Component;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.component.TypedComponentIdentifier;
 import org.mule.runtime.config.internal.dsl.model.ComponentLocationVisitor;
 import org.mule.runtime.config.internal.dsl.model.ExtensionModelHelper;
@@ -28,8 +30,8 @@ import org.mule.runtime.core.api.processor.InterceptingMessageProcessor;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.core.internal.exception.ErrorHandler;
-import org.mule.runtime.core.privileged.exception.TemplateOnErrorHandler;
 import org.mule.runtime.core.internal.routing.AbstractSelectiveRouter;
+import org.mule.runtime.core.privileged.exception.TemplateOnErrorHandler;
 import org.mule.runtime.core.privileged.processor.Router;
 
 import java.util.HashMap;
@@ -46,17 +48,17 @@ public class ComponentModelHelper {
   /**
    * Resolves the {@link org.mule.runtime.api.component.TypedComponentIdentifier.ComponentType} from a {@link ComponentModel}.
    *
-   * @param componentModel a {@link ComponentModel} that represents a component in the configuration.
+   * @param componentIdentifier a {@link ComponentIdentifier} that represents a component in the configuration.
    * @param extensionModelHelper helper to access components in extension model
    * @return the componentModel type.
    */
-  public static TypedComponentIdentifier.ComponentType resolveComponentType(ComponentModel componentModel,
+  public static TypedComponentIdentifier.ComponentType resolveComponentType(ComponentIdentifier componentIdentifier,
                                                                             ExtensionModelHelper extensionModelHelper) {
-    if (componentModel.getIdentifier().equals(ON_ERROR_CONTINE_IDENTIFIER)
-        || componentModel.getIdentifier().equals(ON_ERROR_PROPAGATE_IDENTIFIER)) {
+    if (componentIdentifier.equals(ON_ERROR_CONTINE_IDENTIFIER)
+        || componentIdentifier.equals(ON_ERROR_PROPAGATE_IDENTIFIER)) {
       return ON_ERROR;
     }
-    return extensionModelHelper.findComponentType(componentModel);
+    return extensionModelHelper.findComponentType(componentIdentifier);
   }
 
   public static boolean isAnnotatedObject(ComponentModel componentModel) {
@@ -69,24 +71,24 @@ public class ComponentModelHelper {
     }
     return isOfType(componentModel, Processor.class)
         || isOfType(componentModel, InterceptingMessageProcessor.class)
-        || componentModel.getComponentType().map(type -> type.equals(OPERATION)).orElse(false)
-        || componentModel.getComponentType().map(type -> type.equals(ROUTER)).orElse(false)
-        || componentModel.getComponentType().map(type -> type.equals(SCOPE)).orElse(false);
+        || componentModel.getTypeB().equals(OPERATION)
+        || componentModel.getTypeB().equals(ROUTER)
+        || componentModel.getTypeB().equals(SCOPE);
   }
 
   public static boolean isMessageSource(ComponentModel componentModel) {
     return isOfType(componentModel, MessageSource.class)
-        || componentModel.getComponentType().map(type -> type.equals(SOURCE)).orElse(false);
+        || componentModel.getTypeB().equals(SOURCE);
   }
 
   public static boolean isErrorHandler(ComponentModel componentModel) {
     return isOfType(componentModel, ErrorHandler.class)
-        || componentModel.getComponentType().map(type -> type.equals(ERROR_HANDLER)).orElse(false);
+        || componentModel.getTypeB().equals(ERROR_HANDLER);
   }
 
   public static boolean isTemplateOnErrorHandler(ComponentModel componentModel) {
     return isOfType(componentModel, TemplateOnErrorHandler.class)
-        || componentModel.getComponentType().map(type -> type.equals(ON_ERROR)).orElse(false);
+        || componentModel.getTypeB().equals(ON_ERROR);
   }
 
   private static boolean isOfType(ComponentModel componentModel, Class type) {
@@ -143,6 +145,6 @@ public class ComponentModelHelper {
     return isOfType(componentModel, Router.class) || isOfType(componentModel, AbstractSelectiveRouter.class)
         || ComponentLocationVisitor.BATCH_JOB_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
         || ComponentLocationVisitor.BATCH_PROCESSS_RECORDS_COMPONENT_IDENTIFIER.equals(componentModel.getIdentifier())
-        || componentModel.getComponentType().map(type -> type.equals(ROUTER)).orElse(false);
+        || componentModel.getTypeB().equals(ROUTER);
   }
 }

@@ -95,6 +95,10 @@ public class ExtensionModelHelper {
         ((ComponentAst) componentModel).getMetadata().getParserAttributes().containsKey(ORIGINAL_IDENTIFIER)
             ? (ComponentIdentifier) ((ComponentAst) componentModel).getMetadata().getParserAttributes().get(ORIGINAL_IDENTIFIER)
             : componentModel.getIdentifier();
+    return findComponentType(componentId);
+  }
+
+  public TypedComponentIdentifier.ComponentType findComponentType(ComponentIdentifier componentId) {
     Optional<? extends org.mule.runtime.api.meta.model.ComponentModel> extensionComponentModelOptional =
         findComponentModel(componentId);
 

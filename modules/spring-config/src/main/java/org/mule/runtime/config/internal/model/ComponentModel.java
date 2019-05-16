@@ -140,6 +140,10 @@ public abstract class ComponentModel {
     this.componentType = componentType;
   }
 
+  public TypedComponentIdentifier.ComponentType getTypeB() {
+    return componentType != null ? componentType : TypedComponentIdentifier.ComponentType.UNKNOWN;
+  }
+
   /**
    * @return the value of the name attribute.
    */
@@ -292,6 +296,12 @@ public abstract class ComponentModel {
     public Builder setIdentifier(ComponentIdentifier identifier) {
       checkIsNotBuildingFromRootComponentModel("identifier");
       this.model.identifier = identifier;
+      return this;
+    }
+
+    public Builder setComponentType(TypedComponentIdentifier.ComponentType componentType) {
+      checkIsNotBuildingFromRootComponentModel("componentType");
+      this.model.componentType = componentType;
       return this;
     }
 
