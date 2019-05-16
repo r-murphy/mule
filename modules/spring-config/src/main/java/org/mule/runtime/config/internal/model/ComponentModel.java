@@ -354,6 +354,20 @@ public abstract class ComponentModel {
      * @param value custom attribute value.
      * @return the builder.
      */
+    public Builder addDocAttribute(String name, String value) {
+      checkIsNotBuildingFromRootComponentModel("docAttributes");
+      this.metadataBuilder.putDocAttribute(name, value);
+      return this;
+    }
+
+    /**
+     * Adds a custom attribute to the {@code ComponentModel}. This custom attribute is meant to hold metadata of the configuration
+     * and not to be used to instantiate the runtime object that corresponds to this configuration.
+     *
+     * @param name custom attribute name.
+     * @param value custom attribute value.
+     * @return the builder.
+     */
     public Builder addCustomAttribute(String name, Object value) {
       checkIsNotBuildingFromRootComponentModel("customAttributes");
       this.metadataBuilder.putParserAttribute(name, value);

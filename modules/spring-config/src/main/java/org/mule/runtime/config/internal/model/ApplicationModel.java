@@ -341,7 +341,6 @@ public class ApplicationModel implements ArtifactAst {
     createEffectiveModel();
     indexComponentModels();
     validateModel(componentBuildingDefinitionRegistry);
-    ExtensionModelHelper extensionModelHelper = new ExtensionModelHelper(extensionModels);
     if (runtimeMode) {
       expandModules(extensionModels);
       // Have to index again the component models with macro expanded ones
@@ -350,7 +349,10 @@ public class ApplicationModel implements ArtifactAst {
     // TODO MULE-13894 do this only on runtimeMode=true once unified extensionModel names to use camelCase (see smart connectors
     // and crafted declared extension models)
     resolveComponentTypes();
-    resolveTypedComponentIdentifier(extensionModelHelper);
+
+    // TODO can this be moved up?
+    resolveTypedComponentIdentifier(extensionModels);
+
     executeOnEveryMuleComponentTree(componentModel -> new ComponentLocationVisitor().accept(componentModel));
   }
 
@@ -368,7 +370,9 @@ public class ApplicationModel implements ArtifactAst {
     });
   }
 
-  private void resolveTypedComponentIdentifier(ExtensionModelHelper extensionModelHelper) {
+  private void resolveTypedComponentIdentifier(Set<ExtensionModel> extensionModels) {
+    ExtensionModelHelper extensionModelHelper = new ExtensionModelHelper(extensionModels);
+
     executeOnEveryComponentTree(componentModel -> {
       Optional<TypedComponentIdentifier> typedComponentIdentifier =
           of(TypedComponentIdentifier.builder().identifier(componentModel.getIdentifier())
@@ -675,7 +679,7 @@ public class ApplicationModel implements ArtifactAst {
     }
     for (Map.Entry<String, String> parameter : componentConfiguration.getParameters().entrySet()) {
       if (parameter.getKey().startsWith("doc:")) {
-        builder.addCustomAttribute(parameter.getKey().substring("doc:".length()), parameter.getValue());
+        builder.addDocAttribute(parameter.getKey().substring("doc:".length()), parameter.getValue());
       } else {
         builder.addParameter(parameter.getKey(), parameter.getValue(), false);
       }

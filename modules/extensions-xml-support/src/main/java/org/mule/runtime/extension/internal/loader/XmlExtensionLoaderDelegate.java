@@ -443,7 +443,7 @@ public final class XmlExtensionLoaderDelegate {
     final String category = moduleModel.getParameters().get(CATEGORY);
     final String vendor = moduleModel.getParameters().get(VENDOR);
     final XmlDslModel xmlDslModel = getXmlDslModel((ComponentAst) moduleModel, name, version);
-    final String description = getDescription(moduleModel);
+    final String description = getDescription((ComponentAst) moduleModel);
     final String xmlnsTnsValue = moduleModel.getParameters().get(XMLNS_TNS);
     if (xmlnsTnsValue != null && !xmlDslModel.getNamespace().equals(xmlnsTnsValue)) {
       throw new MuleRuntimeException(createStaticMessage(format("The %s attribute value of the module must be '%s', but found '%s'",
@@ -525,8 +525,8 @@ public final class XmlExtensionLoaderDelegate {
     return createXmlLanguageModel(prefix, namespace, name, version);
   }
 
-  private String getDescription(ComponentModel componentModel) {
-    return componentModel.getParameters().getOrDefault(DOC_DESCRIPTION, "");
+  private String getDescription(ComponentAst componentModel) {
+    return componentModel.getMetadata().getDocAttributes().getOrDefault("description", "").toString();
   }
 
   private List<ComponentModel> extractGlobalElementsFrom(ComponentModel moduleModel) {
@@ -739,7 +739,7 @@ public final class XmlExtensionLoaderDelegate {
     fillGraphWithTnsReferences(directedGraph, operationName, bodyComponentModel.getInnerComponents());
 
     operationDeclarer.withModelProperty(new OperationComponentModelModelProperty(operationModel, bodyComponentModel));
-    operationDeclarer.describedAs(getDescription(operationModel));
+    operationDeclarer.describedAs(getDescription((ComponentAst) operationModel));
     operationDeclarer.getDeclaration().setDisplayModel(getDisplayModel((ComponentAst) operationModel));
     extractOperationParameters(operationDeclarer, operationModel);
     extractOutputType(operationDeclarer.withOutput(), OPERATION_OUTPUT_IDENTIFIER, operationModel,
@@ -822,7 +822,7 @@ public final class XmlExtensionLoaderDelegate {
     MetadataType parameterType = extractType(receivedInputType);
 
     ParameterDeclarer parameterDeclarer = getParameterDeclarer(parameterizedDeclarer, (ComponentAst) param);
-    parameterDeclarer.describedAs(getDescription(param))
+    parameterDeclarer.describedAs(getDescription((ComponentAst) param))
         .withLayout(layoutModelBuilder.build())
         .withDisplayModel(displayModel)
         .withRole(role)
@@ -887,7 +887,7 @@ public final class XmlExtensionLoaderDelegate {
         .stream()
         .filter(child -> child.getIdentifier().equals(componentIdentifier)).findFirst();
     outputAttributesComponentModel
-        .ifPresent(outputComponentModel -> outputDeclarer.describedAs(getDescription(outputComponentModel)));
+        .ifPresent(outputComponentModel -> outputDeclarer.describedAs(getDescription((ComponentAst) outputComponentModel)));
 
     MetadataType metadataType = getMetadataType(outputAttributesComponentModel, calculatedOutput);
     outputDeclarer.ofType(metadataType);

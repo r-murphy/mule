@@ -57,7 +57,7 @@ public class ComponentModelReader {
     for (SimpleConfigAttribute simpleConfigAttribute : configLine.getConfigAttributes().values()) {
 
       if (simpleConfigAttribute.getName().startsWith("doc:")) {
-        builder.addCustomAttribute(simpleConfigAttribute.getName().substring("doc:".length()), simpleConfigAttribute.getValue());
+        builder.addDocAttribute(simpleConfigAttribute.getName().substring("doc:".length()), simpleConfigAttribute.getValue());
       } else {
         builder.addParameter(simpleConfigAttribute.getName(), resolveValueIfIsPlaceHolder(simpleConfigAttribute.getValue()),
                              simpleConfigAttribute.isValueFromSchema());

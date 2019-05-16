@@ -378,7 +378,7 @@ public class MacroExpansionModuleModel {
     ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
     for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
       if (entry.getKey().startsWith("doc:")) {
-        operationReplacementModel.addCustomAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
+        operationReplacementModel.addDocAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
       } else {
         operationReplacementModel.addParameter(entry.getKey(), entry.getValue(), false);
       }
@@ -573,7 +573,7 @@ public class MacroExpansionModuleModel {
 
     for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
       if (entry.getKey().startsWith("doc:")) {
-        globalElementReplacementModel.addCustomAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
+        globalElementReplacementModel.addDocAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
       } else {
         String value =
             calculateAttributeValue(configRefName, moduleGlobalElementsNames, entry.getValue());
@@ -613,7 +613,7 @@ public class MacroExpansionModuleModel {
     ComponentModel.Builder operationReplacementModel = getComponentModelBuilderFrom(modelToCopy);
     for (Map.Entry<String, String> entry : modelToCopy.getParameters().entrySet()) {
       if (entry.getKey().startsWith("doc:")) {
-        operationReplacementModel.addCustomAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
+        operationReplacementModel.addDocAttribute(entry.getKey().substring("doc:".length()), entry.getValue());
       } else {
         String value = configRefName
             .map(s -> calculateAttributeValue(s, moduleGlobalElementsNames, entry.getValue()))
