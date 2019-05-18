@@ -7,6 +7,7 @@
 package org.mule.runtime.config.internal.dsl.model;
 
 import static java.util.Optional.ofNullable;
+import static org.mule.runtime.ast.api.ComponentAst.PostVisitAction.STOP;
 import static org.mule.runtime.internal.dsl.DslConstants.NAME_ATTRIBUTE_NAME;
 
 import org.mule.runtime.api.component.location.ComponentLocation;
@@ -70,6 +71,15 @@ public class SpringComponentModel extends ComponentModel implements ComponentAst
   @Override
   public Optional<String> getRawParameterValue(String paramName) {
     return ofNullable(getParameters().get(paramName));
+  }
+
+  @Override
+  public void visitRecursively(ComponentAstVisitor visitor) {
+    if (STOP == visitor.visit(this)) {
+      return;
+    }
+
+    getInnerComponents().forEach(c -> ((ComponentAst) c).visitRecursively(visitor));
   }
 
 }
