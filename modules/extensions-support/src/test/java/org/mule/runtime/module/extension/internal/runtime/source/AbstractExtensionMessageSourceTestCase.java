@@ -189,6 +189,7 @@ public abstract class AbstractExtensionMessageSourceTestCase extends AbstractMul
   protected SourceCallback sourceCallback;
   protected ExtensionMessageSource messageSource;
   protected StreamingManager streamingManager = spy(new DefaultStreamingManager());
+  private DefaultNotificationDispatcher notificationDispatcher = spy(new DefaultNotificationDispatcher());
 
   @Override
   protected Map<String, Object> getStartUpRegistryObjects() {
@@ -282,8 +283,8 @@ public abstract class AbstractExtensionMessageSourceTestCase extends AbstractMul
         .setProcessingManager(messageProcessingManager)
         .setListener(messageProcessor)
         .setSource(messageSource)
-        .setApplicationName("appName")
-        .setNotificationDispatcher(mock(DefaultNotificationDispatcher.class))
+        .setApplicationName(muleContext.getConfiguration().getId())
+        .setNotificationDispatcher(notificationDispatcher)
         .setTransactionFactoryManager(muleContext.getTransactionFactoryManager())
         .setProcessContextSupplier(() -> messageProcessContext)
         .setCompletionHandlerFactory(completionHandlerFactory)
@@ -325,7 +326,9 @@ public abstract class AbstractExtensionMessageSourceTestCase extends AbstractMul
 
     ExtensionMessageSource messageSource =
         new ExtensionMessageSource(extensionModel, sourceModel, sourceAdapterFactory, configurationProvider, primaryNodeOnly,
-                                   retryPolicyTemplate, cursorStreamProviderFactory, FAIL, extensionManager);
+                                   retryPolicyTemplate, cursorStreamProviderFactory, FAIL, extensionManager,
+                                   notificationDispatcher, muleContext.getTransactionFactoryManager(),
+                                   muleContext.getConfiguration().getId());
     messageSource.setListener(messageProcessor);
     messageSource.setAnnotations(getAppleFlowComponentLocationAnnotations());
     muleContext.getInjector().inject(messageSource);
