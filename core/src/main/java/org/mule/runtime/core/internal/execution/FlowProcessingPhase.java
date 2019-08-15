@@ -9,7 +9,6 @@ package org.mule.runtime.core.internal.execution;
 import static org.mule.runtime.api.notification.ConnectorMessageNotification.MESSAGE_ERROR_RESPONSE;
 import static org.mule.runtime.api.notification.ConnectorMessageNotification.MESSAGE_RESPONSE;
 import static org.mule.runtime.core.api.execution.TransactionalExecutionTemplate.createTransactionalExecutionTemplate;
-
 import org.mule.runtime.api.artifact.Registry;
 import org.mule.runtime.api.exception.DefaultMuleException;
 import org.mule.runtime.api.exception.MuleException;
@@ -26,10 +25,10 @@ import org.mule.runtime.core.privileged.execution.MessageProcessContext;
 import org.mule.runtime.core.privileged.execution.MessageProcessTemplate;
 import org.mule.runtime.core.privileged.execution.RequestResponseFlowProcessingPhaseTemplate;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This phase routes the message through the flow.
@@ -79,8 +78,8 @@ public class FlowProcessingPhase extends NotificationFiringProcessingPhase<FlowP
               muleEvent = flowProcessingPhaseTemplate.beforeRouteEvent(muleEvent);
               muleEvent = flowProcessingPhaseTemplate.routeEvent(muleEvent);
               muleEvent = flowProcessingPhaseTemplate.afterRouteEvent(muleEvent);
-              sendResponseIfNeccessary(messageProcessContext.getMessageSource(), flowConstruct,
-                                       muleEvent, flowProcessingPhaseTemplate);
+              sendResponseIfNecessary(messageProcessContext.getMessageSource(), flowConstruct,
+                                      muleEvent, flowProcessingPhaseTemplate);
               return muleEvent;
             } catch (Exception e) {
               exceptionThrownDuringFlowProcessing.set(e);
@@ -89,15 +88,15 @@ public class FlowProcessingPhase extends NotificationFiringProcessingPhase<FlowP
           });
           if (exceptionThrownDuringFlowProcessing.get() != null
               && !(exceptionThrownDuringFlowProcessing.get() instanceof ResponseDispatchException)) {
-            sendResponseIfNeccessary(messageProcessContext.getMessageSource(), flowConstruct,
-                                     response, flowProcessingPhaseTemplate);
+            sendResponseIfNecessary(messageProcessContext.getMessageSource(), flowConstruct,
+                                    response, flowProcessingPhaseTemplate);
           }
           flowProcessingPhaseTemplate.afterSuccessfulProcessingFlow(response);
         } catch (ResponseDispatchException e) {
           flowProcessingPhaseTemplate.afterFailureProcessingFlow(e);
         } catch (MessagingException e) {
-          sendFailureResponseIfNeccessary(messageProcessContext.getMessageSource(), flowConstruct, e,
-                                          flowProcessingPhaseTemplate);
+          sendFailureResponseIfNecessary(messageProcessContext.getMessageSource(), flowConstruct, e,
+                                         flowProcessingPhaseTemplate);
           flowProcessingPhaseTemplate.afterFailureProcessingFlow(e);
         }
         phaseResultNotifier.phaseSuccessfully();
@@ -125,9 +124,9 @@ public class FlowProcessingPhase extends NotificationFiringProcessingPhase<FlowP
     }
   }
 
-  private void sendFailureResponseIfNeccessary(MessageSource messageSource, FlowConstruct flow,
-                                               MessagingException messagingException,
-                                               FlowProcessingPhaseTemplate flowProcessingPhaseTemplate)
+  private void sendFailureResponseIfNecessary(MessageSource messageSource, FlowConstruct flow,
+                                              MessagingException messagingException,
+                                              FlowProcessingPhaseTemplate flowProcessingPhaseTemplate)
       throws MuleException {
     if (flowProcessingPhaseTemplate instanceof RequestResponseFlowProcessingPhaseTemplate) {
       fireNotification(messageSource, messagingException.getEvent(), flow, MESSAGE_ERROR_RESPONSE);
@@ -135,8 +134,8 @@ public class FlowProcessingPhase extends NotificationFiringProcessingPhase<FlowP
     }
   }
 
-  private void sendResponseIfNeccessary(MessageSource messageSource, FlowConstruct flow, CoreEvent muleEvent,
-                                        FlowProcessingPhaseTemplate flowProcessingPhaseTemplate)
+  private void sendResponseIfNecessary(MessageSource messageSource, FlowConstruct flow, CoreEvent muleEvent,
+                                       FlowProcessingPhaseTemplate flowProcessingPhaseTemplate)
       throws MuleException {
     if (flowProcessingPhaseTemplate instanceof RequestResponseFlowProcessingPhaseTemplate) {
       fireNotification(messageSource, muleEvent, flow, MESSAGE_RESPONSE);
