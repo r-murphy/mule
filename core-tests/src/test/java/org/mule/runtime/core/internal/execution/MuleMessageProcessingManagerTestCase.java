@@ -83,6 +83,9 @@ public class MuleMessageProcessingManagerTestCase extends AbstractMuleTestCase {
     when(mockMuleContext.getErrorTypeRepository()).thenReturn(createDefaultErrorTypeRepository());
 
     when(completeMessageProcessTemplateAndContext.getTransactionConfig()).thenReturn(empty());
+
+    when(mockMuleContext.getConfiguration().getId()).thenReturn("appName");
+    when(mockMuleContext.getTransactionManager()).thenReturn(null);
   }
 
   @Test
