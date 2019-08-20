@@ -255,6 +255,7 @@ public class ExtensionMessageSource extends ExtensionComponent<SourceModel> impl
         .setSource(this)
         .setListener(messageProcessor)
         .setProcessingManager(messageProcessingManager)
+        .setMuleContext(muleContext)
         .setApplicationName(applicationName)
         .setNotificationDispatcher(notificationDispatcher)
         .setTransactionFactoryManager(transactionFactoryManager)
