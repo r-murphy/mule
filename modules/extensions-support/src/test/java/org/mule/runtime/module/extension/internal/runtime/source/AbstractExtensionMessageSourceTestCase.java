@@ -283,7 +283,6 @@ public abstract class AbstractExtensionMessageSourceTestCase extends AbstractMul
         .setProcessingManager(messageProcessingManager)
         .setListener(messageProcessor)
         .setSource(messageSource)
-        .setMuleContext(muleContext)
         .setApplicationName(muleContext.getConfiguration().getId())
         .setNotificationDispatcher(notificationDispatcher)
         .setTransactionFactoryManager(muleContext.getTransactionFactoryManager())
