@@ -7,6 +7,7 @@
 package org.mule.runtime.module.tooling.api;
 
 import static org.mule.runtime.core.api.config.MuleManifest.getProductVersion;
+
 import org.mule.api.annotation.NoImplement;
 import org.mule.runtime.api.connectivity.ConnectivityTestingService;
 import org.mule.runtime.api.exception.MuleException;
@@ -28,6 +29,7 @@ import java.util.Properties;
 @NoImplement
 public interface ToolingService extends Initialisable, Stoppable {
 
+  String DEPLOYMENT_ARTIFACT_NAME = "_muleToolingDeploymentArtifactName";
   String DEPLOYMENT_DOMAIN_NAME_REF = "_muleToolingDeploymentDomainNameRef";
 
   /**

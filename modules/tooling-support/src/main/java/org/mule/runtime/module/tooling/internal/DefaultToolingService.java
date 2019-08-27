@@ -120,7 +120,7 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(File applicationLocation) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION), applicationLocation);
+    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, empty()), applicationLocation);
     try {
       return doCreateApplication(toolingApplicationContent, empty());
     } catch (Throwable t) {
@@ -134,7 +134,7 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(File applicationLocation, Optional<Properties> deploymentProperties) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION), applicationLocation);
+    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, deploymentProperties), applicationLocation);
     try {
       return doCreateApplication(toolingApplicationContent, deploymentProperties);
     } catch (Throwable t) {
@@ -228,7 +228,7 @@ public class DefaultToolingService implements ToolingService {
 
   @Override
   public Domain createDomain(File domainLocation, Optional<Properties> deploymentProperties) throws IOException {
-    String domainName = getUniqueIdString(DOMAIN);
+    String domainName = getUniqueIdString(DOMAIN, empty());
     File toolingDomainContent = artifactFileWriter.writeContent(domainName, domainLocation);
     try {
       return doCreateDomain(toolingDomainContent, deploymentProperties);
@@ -248,7 +248,7 @@ public class DefaultToolingService implements ToolingService {
 
   @Override
   public Domain createDomain(byte[] domainContent, Optional<Properties> deploymentProperties) throws IOException {
-    String domainName = getUniqueIdString(DOMAIN);
+    String domainName = getUniqueIdString(DOMAIN, deploymentProperties);
     File toolingDomainContent = artifactFileWriter.writeContent(domainName, domainContent);
     try {
       return doCreateDomain(toolingDomainContent, deploymentProperties);
@@ -343,7 +343,10 @@ public class DefaultToolingService implements ToolingService {
    *
    * @return {@link String} a uniqueId
    */
-  public String getUniqueIdString(String type) {
+  public String getUniqueIdString(String type, Optional<Properties> deploymentProperties) {
+    if (deploymentProperties.isPresent() && deploymentProperties.get().containsKey(DEPLOYMENT_ARTIFACT_NAME)) {
+      return DEPLOYMENT_ARTIFACT_NAME;
+    }
     return TOOLING_PREFIX + "-" + type + "-" + UUID.getUUID();
   }
 
