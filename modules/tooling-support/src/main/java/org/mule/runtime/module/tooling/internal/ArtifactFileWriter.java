@@ -46,30 +46,6 @@ public class ArtifactFileWriter {
   }
 
   /**
-   * Writes the jar file content to a folder with the given artifactName.
-   *
-   * @param artifactName the name of the folder to where jar content will be exploded.
-   * @param artifactContentLocation the jar file for the artifact.
-   * @return the directory where file has been written.
-   */
-  public File explodeJarContent(String artifactName, File artifactContentLocation) {
-    if (!artifactContentLocation.getAbsolutePath().toString().toLowerCase().endsWith(JAR)) {
-      throw new IllegalArgumentException("Artifact content should be a jar, actual: "
-          + artifactContentLocation.getAbsolutePath());
-    }
-    File directory = new File(folder, artifactName);
-    directory.deleteOnExit();
-    File jarFile = artifactContentLocation;
-    try {
-      unzip(jarFile, directory);
-      return directory;
-    } catch (IOException e) {
-      throw new UncheckedIOException("Error while doing unzip of artifact '" + artifactContentLocation.getAbsolutePath() + "'",
-                                     e);
-    }
-  }
-
-  /**
    * Writes application content from artifactContentLocation to a new artifact folder under {@link #folder} with the artifactName.
    *
    * @param artifactName {@link String} artifact name to create the folder were artifact content will be copied.
@@ -78,6 +54,9 @@ public class ArtifactFileWriter {
    */
   public File writeContent(String artifactName, File artifactContentLocation) {
     File artifactFolder = new File(folder, artifactName);
+    if (artifactFolder.exists()) {
+      throw new IllegalArgumentException("Already exists an artifact folder name: " + artifactFolder);
+    }
     boolean appFolderCreated = artifactFolder.mkdir();
     if (!appFolderCreated) {
       throw new UncheckedIOException("Error while creating a folder to copy artifact content: " + artifactContentLocation,
@@ -103,6 +82,9 @@ public class ArtifactFileWriter {
    */
   public File writeContent(String artifactName, byte[] zipContent) {
     File artifactFolder = new File(folder, artifactName);
+    if (artifactFolder.exists()) {
+      throw new IllegalArgumentException("Already exists an artifact folder name: " + artifactFolder);
+    }
     boolean artifactFolderCreated = artifactFolder.mkdir();
     if (!artifactFolderCreated) {
       throw new UncheckedIOException("Error while creating a folder for artifact: " + artifactName,

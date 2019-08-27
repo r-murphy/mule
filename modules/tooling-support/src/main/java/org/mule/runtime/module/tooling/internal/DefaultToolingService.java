@@ -120,7 +120,8 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(File applicationLocation) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, empty()), applicationLocation);
+    File toolingApplicationContent =
+        artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, empty()), applicationLocation);
     try {
       return doCreateApplication(toolingApplicationContent, empty());
     } catch (Throwable t) {
@@ -134,7 +135,8 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(File applicationLocation, Optional<Properties> deploymentProperties) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, deploymentProperties), applicationLocation);
+    File toolingApplicationContent =
+        artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, deploymentProperties), applicationLocation);
     try {
       return doCreateApplication(toolingApplicationContent, deploymentProperties);
     } catch (Throwable t) {
@@ -187,7 +189,7 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(byte[] appContent) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION), appContent);
+    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, empty()), appContent);
     try {
       return doCreateApplication(toolingApplicationContent, empty());
     } catch (Throwable t) {
@@ -201,7 +203,8 @@ public class DefaultToolingService implements ToolingService {
    */
   @Override
   public Application createApplication(byte[] appContent, Optional<Properties> deploymentProperties) throws IOException {
-    File toolingApplicationContent = artifactFileWriter.writeContent(getUniqueIdString(APPLICATION), appContent);
+    File toolingApplicationContent =
+        artifactFileWriter.writeContent(getUniqueIdString(APPLICATION, deploymentProperties), appContent);
     try {
       return doCreateApplication(toolingApplicationContent, deploymentProperties);
     } catch (Throwable t) {
